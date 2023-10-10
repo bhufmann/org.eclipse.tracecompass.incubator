@@ -128,6 +128,11 @@ public class InAndOutConfigurationSource implements ITmfConfigurationSource {
         return fConfigurations.containsKey(id);
     }
 
+    @Override
+    public void dispose() {
+        fConfigurations.clear();
+    }
+
     private ITmfConfiguration createOrUpdateJson(Map<String, Object> parameters) throws TmfConfigurationException {
         File fromFile = getFile(parameters);
         if (fromFile == null) {
