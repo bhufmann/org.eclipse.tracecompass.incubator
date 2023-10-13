@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,14 +29,22 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.Activator;
+import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModule;
+import org.eclipse.tracecompass.tmf.core.component.TmfComponent;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigParamDescriptor;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.config.ITmfExperimentConfigSource;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigParamDescriptor;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
+import org.eclipse.tracecompass.tmf.core.statesystem.TmfStateSystemAnalysisModule;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 
 import com.google.common.collect.ImmutableList;
 
@@ -45,7 +54,7 @@ import com.google.common.collect.ImmutableList;
  * @author Bernd Hufmann
  */
 @SuppressWarnings("null")
-public class InAndOutConfigurationSource implements ITmfConfigurationSource {
+public class InAndOutConfigurationSource extends TmfComponent implements ITmfExperimentConfigSource {
     private static final ITmfConfigurationSourceType CONFIG_SOURCE_TYPE;
 
     private static final String IN_AND_OUT_DIRECTORY = "inandout"; //$NON-NLS-1$
@@ -78,6 +87,7 @@ public class InAndOutConfigurationSource implements ITmfConfigurationSource {
      * Default Constructor
      */
     public InAndOutConfigurationSource() {
+        super("InAndOutConfigurationSource"); //$NON-NLS-1$
         for (Entry<@NonNull String, @NonNull File> entry : listFiles().entrySet()) {
             ITmfConfiguration config = createConfiguration(entry.getValue());
             fConfigurations.put(config.getId(), config);
@@ -133,6 +143,65 @@ public class InAndOutConfigurationSource implements ITmfConfigurationSource {
         fConfigurations.clear();
     }
 
+    @Override
+    public ITmfConfiguration applyConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException {
+        ITmfConfiguration config = fConfigurations.get(configId);
+        if (config == null) {
+            throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
+        }
+
+        // TODO retrieve data provider descriptors
+        List<IDataProviderDescriptor> descriptors = new ArrayList<>();
+        File toFile = getTraceInAndOutFile(trace);
+
+        File fromFile = getInAndOutFile(config.getId());
+        if (!fromFile.exists()) {
+            throw new TmfConfigurationException("InAndOut configuration doesn't exist"); //$NON-NLS-1$
+        }
+        IStatus status = copyFile(fromFile, toFile);
+        String statusMessage = status.getMessage();
+        String message = statusMessage != null? statusMessage : "Failed to update json analysis configuration"; //$NON-NLS-1$
+        if (status.getException() != null) {
+            throw new TmfConfigurationException(message, status.getException());
+        }
+        TmfConfiguration.Builder builder = new TmfConfiguration.Builder();
+            builder.setId(config.getId())
+                .setName(config.getName())
+                .setDescription(config.getDescription())
+                .setSourceTypeId(config.getSourceTypeId())
+                .setParameters(config.getParameters())
+                .setDataProviderDescriptors(descriptors);
+        config = builder.build();
+        return config;
+    }
+
+    @Override
+    public void removeConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException {
+        ITmfConfiguration config = fConfigurations.get(configId);
+        if (config == null) {
+            throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
+        }
+
+        File toFile = getTraceInAndOutFile(trace);
+
+        if (!toFile.exists()) {
+            throw new TmfConfigurationException("InAndOut not configured for this trace"); //$NON-NLS-1$
+        }
+
+        deleteFile(toFile);
+
+        // TODO: There must be a better way
+        for (ITmfTrace tr: TmfTraceManager.getTraceSetWithExperiment(trace)) {
+            TmfStateSystemAnalysisModule.getStateSystem(tr, InAndOutAnalysisModule.ID);
+        }
+        Iterable<InAndOutAnalysisModule> modules = TmfTraceUtils.getAnalysisModulesOfClass(trace, InAndOutAnalysisModule.class);
+        for (InAndOutAnalysisModule module : modules) {
+            if (module.getTrace() == trace) {
+                module.clearPersistentData();
+            }
+        }
+    }
+
     private ITmfConfiguration createOrUpdateJson(Map<String, Object> parameters) throws TmfConfigurationException {
         File fromFile = getFile(parameters);
         if (fromFile == null) {
@@ -181,7 +250,15 @@ public class InAndOutConfigurationSource implements ITmfConfigurationSource {
         return file;
     }
 
-    private static synchronized @NonNull Map<@NonNull String, @NonNull File> listFiles() {
+    private static File getTraceInAndOutFile(ITmfTrace trace) {
+        String folder = TmfTraceManager.getSupplementaryFileDir(trace);
+        IPath path = new Path(folder);
+        String fileName = InAndOutAnalysisModule.ID.concat(InAndOutAnalysisModule.JSON);
+        File file = path.addTrailingSeparator().append(fileName).toFile();
+        return file;
+    }
+
+    public static synchronized @NonNull Map<@NonNull String, @NonNull File> listFiles() {
         IPath pathToFolder = Activator.getInstance().getStateLocation();
         pathToFolder = pathToFolder.addTrailingSeparator().append(IN_AND_OUT_DIRECTORY);
 
