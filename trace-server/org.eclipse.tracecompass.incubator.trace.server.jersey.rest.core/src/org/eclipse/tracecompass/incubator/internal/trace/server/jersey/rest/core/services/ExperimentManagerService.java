@@ -70,6 +70,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
+import org.eclipse.tracecompass.tmf.core.util.Pair;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
@@ -511,6 +512,8 @@ public class ExperimentManagerService {
         return experiment;
     }
 
+
+
     /**
      * Get the list of trace UUIDs of an experiment from the experiment manager.
      *
@@ -561,5 +564,31 @@ public class ExperimentManagerService {
         TRACE_UUIDS.clear();
         EXPERIMENT_RESOURCES.clear();
         TRACE_ANNOTATION_PROVIDERS.clear();
+    }
+
+    /**
+     * Try and find an experiment with the queried UUID in the experiment
+     * manager.
+     *
+     * @param expUUID
+     *            queried {@link UUID}
+     * @return the experiment or null if none match.
+     */
+    public static synchronized @Nullable Pair<IResource, List<IResource>> getExperimentResourcesByUUID(UUID expUUID) {
+        IResource expResource = EXPERIMENT_RESOURCES.get(expUUID);
+        if (expResource == null) {
+            return null;
+        }
+        List<UUID> traceUUIDs = TRACE_UUIDS.get(expUUID);
+        List<IResource> traceResources = new ArrayList<>();
+        if (traceUUIDs != null) {
+            for(UUID traceUUID : traceUUIDs) {
+                IResource res = TraceManagerService.getTraceResource(traceUUID);
+                if (res != null) {
+                    traceResources.add(res);
+                }
+            }
+        }
+        return new Pair<>(expResource, traceResources);
     }
 }
