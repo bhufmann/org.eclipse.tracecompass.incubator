@@ -15,12 +15,8 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.CFG_TYPE_ID;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.DT;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.EXP_UUID;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.NO_SUCH_TRACE;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -32,17 +28,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.tracecompass.common.core.log.TraceCompassLog;
-import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLog;
-import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLogBuilder;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.QueryParameters;
-import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
-import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
 import org.eclipse.tracecompass.tmf.core.config.ITmfExperimentConfigSource;
-import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceManager;
-import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
-import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,9 +43,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @Path("/experiments/{expUUID}/config")
 public class ExperimentConfigurationService {
-    private static final @NonNull Logger LOGGER = TraceCompassLog.getLogger(ExperimentConfigurationService.class);
+//    private static final @NonNull Logger LOGGER = TraceCompassLog.getLogger(ExperimentConfigurationService.class);
 
-    private final TmfConfigurationSourceManager fConfigSourceManager = TmfConfigurationSourceManager.getInstance();
+//    private final TmfConfigurationSourceManager fConfigSourceManager = TmfConfigurationSourceManager.getInstance();
 
     /**
      * @param expUUID
@@ -76,40 +63,43 @@ public class ExperimentConfigurationService {
                 @PathParam("typeId") String typeId,
                 QueryParameters queryParameters) {
 
-        Map<String, Object> params = queryParameters.getParameters();
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#applyConfiguration") //$NON-NLS-1$
-                .setCategory(typeId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
-                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
+        return Response.status(Status.METHOD_NOT_ALLOWED).entity("Not implemented!").build();
 
-            ITmfConfigurationSource configurationSource = fConfigSourceManager.getConfigurationSource(typeId);
-            if (!(configurationSource instanceof ITmfExperimentConfigSource)) {
-                return Response.status(Status.NOT_FOUND).entity("Configuration source type doesn't exist").build(); //$NON-NLS-1$
-            }
-
-            Object configId = params.get("configId"); //$NON-NLS-1$
-            if (!(configId instanceof String)) {
-                // No config for existing configuration is passed.
-                // Try to create a new one.
-                try {
-                    ITmfConfiguration config = configurationSource.create(params);
-                    configId = config.getId();
-                } catch (TmfConfigurationException e) {
-                    return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-//                    return Response.status(Status.NOT_FOUND).entity("Configuration instance doesn't exist for type " + typeId).build(); //$NON-NLS-1$
-                }
-            }
-            ITmfConfiguration config = ((ITmfExperimentConfigSource) configurationSource).applyConfiguration((String) configId, experiment);
-            return Response.ok(config).build();
-        } catch (TmfConfigurationException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+//        Map<String, Object> params = queryParameters.getParameters();
+//        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#applyConfiguration") //$NON-NLS-1$
+//                .setCategory(typeId).build()) {
+//            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
+//            if (experiment == null) {
+//                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+//            }
+//
+//            ITmfConfigurationSource configurationSource = fConfigSourceManager.getConfigurationSource(typeId);
+//            if (!(configurationSource instanceof ITmfExperimentConfigSource)) {
+//                return Response.status(Status.NOT_FOUND).entity("Configuration source type doesn't exist").build(); //$NON-NLS-1$
+//            }
+//
+//            Object configId = params.get("configId"); //$NON-NLS-1$
+//            if (!(configId instanceof String)) {
+//                // No config for existing configuration is passed.
+//                // Try to create a new one.
+//                try {
+//                    ITmfConfiguration config = configurationSource.create(params);
+//                    configId = config.getId();
+//                } catch (TmfConfigurationException e) {
+//                    return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+////                    return Response.status(Status.NOT_FOUND).entity("Configuration instance doesn't exist for type " + typeId).build(); //$NON-NLS-1$
+//                }
+//            }
+//            ITmfConfiguration config = ((ITmfExperimentConfigSource) configurationSource).applyConfiguration((String) configId, experiment);
+//            return Response.ok(config).build();
+//        } catch (TmfConfigurationException e) {
+//            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+//        }
     }
 
     /**
      * DELETE a configuration by type and instance id
+     * @param expUUID
      *
      * @param typeId
      *            the configuration source type ID
@@ -127,23 +117,24 @@ public class ExperimentConfigurationService {
     })
     public Response deleteConfiguration(@Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID, @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId,
             @Parameter(description = CFG_CONFIG_ID) @PathParam("configId") String configId) {
-        TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-        if (experiment == null) {
-            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-        }
-        ITmfConfigurationSource configurationSource = fConfigSourceManager.getConfigurationSource(typeId);
-        if (!(configurationSource instanceof ITmfExperimentConfigSource)) {
-            return Response.status(Status.NOT_FOUND).entity("Configuration source type doesn't exist").build(); //$NON-NLS-1$
-        }
-
-        if (configId == null || !configurationSource.contains(configId)) {
-            return Response.status(Status.NOT_FOUND).entity("Configuration instance doesn't exist for type " + typeId).build(); //$NON-NLS-1$
-        }
-        try {
-            ((ITmfExperimentConfigSource) configurationSource).removeConfiguration(configId, experiment);
-        } catch (TmfConfigurationException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
-        return Response.ok().build();
+        return Response.status(Status.METHOD_NOT_ALLOWED).entity("Not implemented!").build();
+        //        TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
+//        if (experiment == null) {
+//            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+//        }
+//        ITmfConfigurationSource configurationSource = fConfigSourceManager.getConfigurationSource(typeId);
+//        if (!(configurationSource instanceof ITmfExperimentConfigSource)) {
+//            return Response.status(Status.NOT_FOUND).entity("Configuration source type doesn't exist").build(); //$NON-NLS-1$
+//        }
+//
+//        if (configId == null || !configurationSource.contains(configId)) {
+//            return Response.status(Status.NOT_FOUND).entity("Configuration instance doesn't exist for type " + typeId).build(); //$NON-NLS-1$
+//        }
+//        try {
+//            ((ITmfExperimentConfigSource) configurationSource).removeConfiguration(configId, experiment);
+//        } catch (TmfConfigurationException e) {
+//            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+//        }
+//        return Response.ok().build();
     }
 }

@@ -13,6 +13,7 @@ package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.cor
 
 import java.io.IOException;
 
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderCapabilities;
 import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -46,7 +47,22 @@ public class DataProviderDescriptorSerializer extends StdSerializer<IDataProvide
         gen.writeStringField("name", value.getName()); //$NON-NLS-1$
         gen.writeStringField("description", value.getDescription()); //$NON-NLS-1$
         gen.writeStringField("type", value.getType().name()); //$NON-NLS-1$
+        IDataProviderCapabilities cap = value.getCapabilities();
+        if (cap != null) {
+            gen.writeObjectFieldStart("capabilities");
+            gen.writeBooleanField("canCreateXY", cap.canCreateXY());
+            gen.writeBooleanField("canCreateTimeGraph", cap.canCreateTimeGraph());
+            gen.writeBooleanField("canCreateDataTree", cap.canCreateDataTree());
+            gen.writeBooleanField("canCreateVirtualTable", cap.canCreateVirtualTable());
+            gen.writeBooleanField("canDelete", cap.canDelete());
+            gen.writeEndObject();
+        }
+        if (value.getTimeGraphCreatorConfiguration() != null) {
+            gen.writeObjectField("tgConfig", value.getTimeGraphCreatorConfiguration());
+        }
+        if (value.getTimeGraphCreatorType() != null) {
+            gen.writeObjectField("tgCreatorType", value.getTimeGraphCreatorType());
+        }
         gen.writeEndObject();
     }
-
 }

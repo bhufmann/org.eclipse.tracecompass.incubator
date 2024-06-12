@@ -26,6 +26,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.FilterQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.FilterQueryParameters.FilterQueryStrategy;
 import org.eclipse.tracecompass.statesystem.core.StateSystemUtils;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.config.TmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderParameterUtils;
 import org.eclipse.tracecompass.tmf.core.model.OutputElementStyle;
 import org.eclipse.tracecompass.tmf.core.model.annotations.Annotation;
@@ -440,4 +442,41 @@ public class QueryParametersUtil {
         }
         return null;
     }
+
+    public static String validateConfigurationParam(Map<String, Object> params) {
+        Object value = params.get("config");
+        if (value == null) {
+            return MISSING_PARAMETERS + SEP + "config";
+        }
+
+        /* Replace default deserialized map with the correct element object */
+        if (value instanceof ITmfConfiguration) {
+            return null;
+        }
+        params.remove("config");
+        if (value instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) value;
+            Object idObj = map.get("id");
+            Object sourceIdObj = map.get("sourceTypeId");
+            Object nameObj = map.get("name");
+            Object descriptionObj = map.get("description");
+            Object paramObj = map.get("parameter");
+            TmfConfiguration.Builder builder = new TmfConfiguration.Builder();
+            builder.setId(idObj instanceof String ? (String) idObj : "---id-not-set---");
+            builder.setSourceTypeId(sourceIdObj instanceof String ? (String) sourceIdObj : "---soureTypeId-not-set---");
+            if (descriptionObj instanceof String) {
+                builder.setDescription((String) descriptionObj);
+            }
+            if (nameObj instanceof String) {
+                builder.setName((String) nameObj);
+            }
+            if (paramObj instanceof Map) {
+                builder.setParameters((Map<String, Object>) paramObj);
+            }
+            params.put("config", builder.build());
+            return null;
+        }
+        return "Invalid params" + SEP;
+    }
+
 }

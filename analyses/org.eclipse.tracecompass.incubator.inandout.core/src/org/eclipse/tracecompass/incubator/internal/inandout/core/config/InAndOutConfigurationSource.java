@@ -144,7 +144,7 @@ public class InAndOutConfigurationSource extends TmfComponent implements ITmfExp
     }
 
     @Override
-    public ITmfConfiguration applyConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException {
+    public List<IDataProviderDescriptor> createDataProvider(String configId, ITmfTrace trace) throws TmfConfigurationException {
         ITmfConfiguration config = fConfigurations.get(configId);
         if (config == null) {
             throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
@@ -172,11 +172,17 @@ public class InAndOutConfigurationSource extends TmfComponent implements ITmfExp
                 .setParameters(config.getParameters())
                 .setDataProviderDescriptors(descriptors);
         config = builder.build();
-        return config;
+        // TODO file descriptors
+        return descriptors;
     }
 
     @Override
-    public void removeConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException {
+    public void removeDataProvider(IDataProviderDescriptor inputDescriptor, ITmfTrace trace) throws TmfConfigurationException {
+        ITmfConfiguration inputConfig = inputDescriptor.getTimeGraphCreatorConfiguration();
+        if (inputConfig == null) {
+            throw new TmfConfigurationException("No input configuration for descriptor: " + inputDescriptor.getName()); //$NON-NLS-1$
+        }
+        String configId = inputConfig.getId();
         ITmfConfiguration config = fConfigurations.get(configId);
         if (config == null) {
             throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
