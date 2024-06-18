@@ -27,6 +27,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ConfigurationManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentConfigurationService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.DataProviderService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentManagerService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
@@ -136,6 +137,7 @@ public class WebApplication {
         rc.register(TraceManagerService.class);
         rc.register(ExperimentManagerService.class);
         rc.register(DataProviderService.class);
+        rc.register(ExperimentConfigurationService.class);
         rc.register(FilterService.class);
         rc.register(HealthService.class);
         rc.register(IdentifierService.class);
