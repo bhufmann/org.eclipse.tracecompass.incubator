@@ -20,4 +20,11 @@
          </tracetype>
       </module>
    </extension>
+   <extension
+         point="org.eclipse.tracecompass.tmf.core.config">
+      <source
+            id="org.eclipse.tracecompass.incubator.internal.inandout.core.config"
+            class="org.eclipse.tracecompass.incubator.internal.inandout.core.config.InAndOutConfigurationSource">
+      </source>
+   </extension>
 </plugin>
