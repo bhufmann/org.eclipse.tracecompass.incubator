@@ -54,8 +54,8 @@ public class InAndOutAnalysisModuleSource implements IAnalysisModuleSource {
         if (configSource != null) {
             List<ITmfConfiguration> configurations = configSource.getConfigurations();
             for (ITmfConfiguration config : configurations) {
-                SegmentSpecifier inAndOutConfig = new SegmentSpecifier(config);
-                IAnalysisModuleHelper helper = new InAndOutAnalysisHelper(inAndOutConfig);
+                // TODO validate
+                IAnalysisModuleHelper helper = new InAndOutAnalysisHelper(config);
                 modules.add(helper);
             }
         }
@@ -70,6 +70,4 @@ public class InAndOutAnalysisModuleSource implements IAnalysisModuleSource {
         fModules = null;
         TmfAnalysisManager.refreshModules();
     }
-
-
 }

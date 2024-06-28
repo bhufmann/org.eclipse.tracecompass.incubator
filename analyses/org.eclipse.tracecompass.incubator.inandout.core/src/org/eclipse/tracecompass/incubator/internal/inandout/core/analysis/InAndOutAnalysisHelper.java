@@ -1,7 +1,6 @@
 package org.eclipse.tracecompass.incubator.internal.inandout.core.analysis;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -12,6 +11,7 @@ import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisManager;
 import org.eclipse.tracecompass.tmf.core.analysis.requirements.TmfAbstractAnalysisRequirement;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceManager;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfAnalysisException;
@@ -23,7 +23,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
 
     private static final String ICON_ANALYSIS = "/icons/inandout.png"; //$NON-NLS-1$
 
-    private final SegmentSpecifier fConfig;
+    private final SegmentSpecifierList fSpecifiers;
     private final String fId;
 
     /**
@@ -36,9 +36,9 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
      * @param type
      *            TODO
      */
-    public InAndOutAnalysisHelper(SegmentSpecifier config) {
+    public InAndOutAnalysisHelper(ITmfConfiguration config) {
         fId =  InAndOutAnalysisModule.ID + config.getId();
-        fConfig = config;
+        fSpecifiers = new SegmentSpecifierList(config);
     }
 
     @Override
@@ -114,41 +114,55 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
     // ------------------------------------------------------------------------
     // ITmfPropertiesProvider
     // ------------------------------------------------------------------------
-    @SuppressWarnings("null")
     @Override
     public @NonNull Map<@NonNull String, @NonNull String> getProperties() {
-        return fConfig.getProperties();
-    }
-
-    /**
-     * @return configuration
-     */
-    protected SegmentSpecifier getConfiguration() {
-        return fConfig;
+//        SegmentSpecifierList specifiers = fSpecifiers;
+//        if (specifiers == null) {
+            return Collections.emptyMap();
+//        }
+//        return ImmutableMap.copyOf(specifiers.getConfiguration().getParameters());
     }
 
     @Override
     public String getName() {
-        return "Custom InAndOut Analysis Module -(" + getConfiguration().getId() + ")";
+        StringBuilder builder = new StringBuilder("Custom InAndOut Analysis Module");
+        SegmentSpecifierList specifiers = fSpecifiers;
+        if (specifiers != null) {
+            builder.append('(')
+                .append(specifiers.getConfiguration().getName())
+                .append(')');
+
+        }
+        return builder.toString();
     }
 
     @Override
     public String getHelpText() {
-        return "Custom InAndOut Analysis Module for configuration: " + getConfiguration().getId() ;
+        StringBuilder builder = new StringBuilder("Custom InAndOut Analysis Module");
+        SegmentSpecifierList specifiers = fSpecifiers;
+        if (specifiers != null) {
+            builder.append("for configuration: ")
+                .append(specifiers.getConfiguration().getName());
+        }
+        return builder.toString();
     }
 
     @Override
     public final @Nullable IAnalysisModule newModule(ITmfTrace trace) throws TmfAnalysisException {
+        SegmentSpecifierList specifiers = fSpecifiers;
+        if (specifiers == null) {
+            return null;
+        }
         ITmfConfigurationSource configSource = TmfConfigurationSourceManager.getInstance().getConfigurationSource(InAndOutConfigurationSource.IN_AND_OUT_CONFIG_SOURCE_TYPE_ID);
         if (!(configSource instanceof InAndOutConfigurationSource)) {
             return null;
         }
 
-        if (!((InAndOutConfigurationSource) configSource).appliesToTrace(trace, getConfiguration().getId())) {
+        if (!((InAndOutConfigurationSource) configSource).appliesToTrace(trace, specifiers.getConfiguration().getId())) {
             return null;
         }
 
-        IAnalysisModule module = new InAndOutAnalysisModule(getConfiguration());
+        IAnalysisModule module = new InAndOutAnalysisModule(specifiers);
         module.setName(getName());
         return setTrace(module, trace);
     }

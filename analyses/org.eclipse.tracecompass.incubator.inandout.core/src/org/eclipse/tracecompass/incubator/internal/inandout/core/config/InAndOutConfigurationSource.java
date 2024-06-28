@@ -10,9 +10,9 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.incubator.internal.inandout.core.config;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +21,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.Activator;
-import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.SegmentSpecifier;
+import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModule;
+import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModuleSource;
+import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.SegmentSpecifierList;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigParamDescriptor;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
@@ -30,13 +32,13 @@ import org.eclipse.tracecompass.tmf.core.config.ITmfExperimentConfigSource;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigParamDescriptor;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceType;
-import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
 import com.google.common.collect.ImmutableList;
@@ -55,26 +57,10 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
     private static final String NAME = "In And Out Analysis"; //$NON-NLS-1$
     private static final String DESCRIPTION_KEY = "description"; //$NON-NLS-1$
     public static final String DESCRIPTION = "Configure In And Out analysis using file description";
-    private static final String LABEL_KEY = SegmentSpecifier.LABEL_KEY;
-    private static final String LABEL_DESCRIPTION = SegmentSpecifier.LABEL_DESCRIPTION;
-
-    private static final String IN_REGEX_KEY = SegmentSpecifier.IN_REGEX_KEY;
-    private static final String IN_REGEX_DESCRIPTION = SegmentSpecifier.IN_REGEX_DESCRIPTION;
-
-    private static final String OUT_REGEX_KEY = SegmentSpecifier.OUT_REGEX_KEY;
-    private static final String OUT_REGEX_DESCRIPTION = SegmentSpecifier.OUT_REGEX_DESCRIPTION;
-
-    private static final String CONTEXT_IN_REGEX_KEY = SegmentSpecifier.CONTEXT_IN_REGEX_KEY;
-    private static final String CONTEXT_IN_REGEX_DESCRIPTION = SegmentSpecifier.CONTEXT_IN_REGEX_DESCRIPTION;
-
-    private static final String CONTEXT_OUT_REGEX_KEY = SegmentSpecifier.CONTEXT_OUT_REGEX_KEY;
-    private static final String CONTEXT_OUT_REGEX_DESCRIPTION = SegmentSpecifier.CONTEXT_OUT_REGEX_DESCRIPTION;
-
-    private static final String CLASSIFIER_KEY = SegmentSpecifier.CONTEXT_IN_REGEX_KEY;
-    private static final String CLASSIFIER_DESCRIPTION = SegmentSpecifier.CLASSIFIER_DESCRIPTION;
+    private static final String LABEL_KEY = "json";
+    private static final String LABEL_DESCRIPTION = "InAndOut JSON string";
 
     private Map<String, ITmfConfiguration> fConfigurations = new ConcurrentHashMap<>();
-//    private Map<String, List<IDataProviderDescriptor>> fDescriptors = new ConcurrentHashMap<>();
     private final JsonUtils fJsonUtil = new JsonUtils(IN_AND_OUT_CONFIG_SOURCE_TYPE_ID);
 
     static {
@@ -83,36 +69,7 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
         TmfConfigParamDescriptor.Builder descriptorBuilder = new TmfConfigParamDescriptor.Builder()
                 .setKeyName(LABEL_KEY)
                 .setDescription(LABEL_DESCRIPTION)
-                .setIsRequired(true);
-        list.add(descriptorBuilder.build());
-
-        descriptorBuilder = new TmfConfigParamDescriptor.Builder()
-                .setKeyName(IN_REGEX_KEY)
-                .setDescription(IN_REGEX_DESCRIPTION)
-                .setIsRequired(true);
-        list.add(descriptorBuilder.build());
-
-        descriptorBuilder = new TmfConfigParamDescriptor.Builder()
-                .setKeyName(OUT_REGEX_KEY)
-                .setDescription(OUT_REGEX_DESCRIPTION)
-                .setIsRequired(true);
-        list.add(descriptorBuilder.build());
-
-        descriptorBuilder = new TmfConfigParamDescriptor.Builder()
-                .setKeyName(CONTEXT_IN_REGEX_KEY)
-                .setDescription(CONTEXT_IN_REGEX_DESCRIPTION)
-                .setIsRequired(true);
-        list.add(descriptorBuilder.build());
-
-        descriptorBuilder = new TmfConfigParamDescriptor.Builder()
-                .setKeyName(CONTEXT_OUT_REGEX_KEY)
-                .setDescription(CONTEXT_OUT_REGEX_DESCRIPTION)
-                .setIsRequired(true);
-        list.add(descriptorBuilder.build());
-
-        descriptorBuilder = new TmfConfigParamDescriptor.Builder()
-                .setKeyName(CLASSIFIER_KEY)
-                .setDescription(CLASSIFIER_DESCRIPTION)
+                .setDataType("json")
                 .setIsRequired(true);
         list.add(descriptorBuilder.build());
 
@@ -149,47 +106,17 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
     public ITmfConfiguration create(Map<String, Object> parameters) throws TmfConfigurationException {
         Object labelObj = parameters.get(LABEL_KEY);
         if (!(labelObj instanceof String)) {
-            throw new TmfConfigurationException("No label provided or not a string"); //$NON-NLS-1$
+            throw new TmfConfigurationException("No json input provided or not a string"); //$NON-NLS-1$
         }
         String label = labelObj.toString();
 
-        Object inRegExObj = parameters.get(IN_REGEX_KEY);
-        if (!(inRegExObj instanceof String)) {
-            throw new TmfConfigurationException("No inRegEx provided or not a string"); //$NON-NLS-1$
-        }
-        String inRegex = inRegExObj.toString();
-
-        Object outRegExObj = parameters.get(OUT_REGEX_KEY);
-        if (!(outRegExObj instanceof String)) {
-            throw new TmfConfigurationException("No outRegEx provided or not a string"); //$NON-NLS-1$
-        }
-        String outRegex = outRegExObj.toString();
-
-        Object contextInRegExObj = parameters.get(CONTEXT_IN_REGEX_KEY);
-        if (!(contextInRegExObj instanceof String)) {
-            throw new TmfConfigurationException("No contextInRegEx provided or not a string"); //$NON-NLS-1$
-        }
-        String contextInRegEx = contextInRegExObj.toString();
-
-        Object contextOutRegExObj = parameters.get(CONTEXT_OUT_REGEX_KEY);
-        if (!(contextOutRegExObj instanceof String)) {
-            throw new TmfConfigurationException("No inRegEx provided or not a string"); //$NON-NLS-1$
-        }
-        String contextOutRegEx = contextOutRegExObj.toString();
-
-        Object classifierObj = parameters.get(CLASSIFIER_KEY);
-        if (!(classifierObj instanceof String)) {
-            throw new TmfConfigurationException("No classifier provided or not a string"); //$NON-NLS-1$
-        }
-        String classifier = classifierObj.toString();
-
         Object nameObj = parameters.get(NAME_KEY);
-        String name = "InAndOut: " + label; //$NON-NLS-1$
+        String name = "InAndOut"; //$NON-NLS-1$
         if (nameObj instanceof String) {
             name = nameObj.toString();
         }
 
-        String description = DESCRIPTION +": " + label;
+        String description = DESCRIPTION;
         Object descriptionObj = parameters.get(DESCRIPTION_KEY);
         if (descriptionObj instanceof String) {
             description = descriptionObj.toString();
@@ -197,11 +124,6 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
 
         Map<String, String> map = new HashMap<>();
         map.put(LABEL_KEY, label);
-        map.put(IN_REGEX_KEY, inRegex);
-        map.put(OUT_REGEX_KEY, outRegex);
-        map.put(CONTEXT_IN_REGEX_KEY, contextInRegEx);
-        map.put(CONTEXT_OUT_REGEX_KEY, contextOutRegEx);
-        map.put(CLASSIFIER_KEY, classifier);
         TmfConfiguration.Builder builder = new TmfConfiguration.Builder()
                 .setName(name)
                 .setDescription(description.toString())
@@ -263,12 +185,11 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
             throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
         }
         appendConfigId(trace, config);
-//        InAndOutModuleSource.notifyModuleChange();
-        for (ITmfTrace tr : TmfTraceManager.getTraceSetWithExperiment(trace)) {
+        InAndOutAnalysisModuleSource.notifyModuleChange();
+        for (ITmfTrace tr : TmfTraceManager.getTraceSet(trace)) {
             tr.refreshAnalysisModules();
         }
         // FIXME: config is applied to all traces in the experiment and should be per trace
-//        fDescriptors.put(configId, getDescriptors(trace, configId));
         return config;
     }
 
@@ -279,21 +200,27 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
             throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
         }
 
-        List<IDataProviderDescriptor> list = fDescriptors.remove(configId);
-        if (list == null || list.isEmpty()) {
-            list = Collections.emptyList();
-        }
-//        IDataProviderFactory factory = DataProviderManager.getInstance().getFactory(CustomInAndOutDataProviderFactory.PROVIDER_ID);
-//        if (factory instanceof CustomInAndOutDataProviderFactory) {
-//            ((CustomInAndOutDataProviderFactory) factory).handleConfigurationDeleted(trace, configId);
-//        }
-        removeConfiguration(trace, config);
+        Iterator<InAndOutAnalysisModule> csModules = TmfTraceUtils.getAnalysisModulesOfClass(trace, InAndOutAnalysisModule.class).iterator();
+        while (csModules.hasNext()) {
+            InAndOutAnalysisModule csModule = csModules.next();
+            SegmentSpecifierList specifiers = csModule.getSeSpecifierList();
 
+            if (specifiers != null && specifiers.getConfiguration().getId().equals(configId)) {
+//                ITmfTreeDataProvider<?> dp = DataProviderManager.getInstance().getExistingDataProvider(trace, generateDpId(csModule.getId()), ITmfTreeDataProvider.class);
+//                if (dp != null) {
+//                    DataProviderManager.getInstance().removeDataProvider(trace, dp);
+//                    dp.dispose();
+//                }
+                csModule.clearPersistentData();
+            }
+        }
+
+        removeConfiguration(trace, config);
         // Reset analysis module source
-//        InAndOutModuleSource.notifyModuleChange();
-//        for (ITmfTrace tr : TmfTraceManager.getTraceSetWithExperiment(trace)) {
-//            tr.refreshAnalysisModules();
-//        }
+        InAndOutAnalysisModuleSource.notifyModuleChange();
+        for (ITmfTrace tr : TmfTraceManager.getTraceSet(trace)) {
+            tr.refreshAnalysisModules();
+        }
     }
 
     /**
@@ -368,17 +295,4 @@ public class InAndOutConfigurationSource implements ITmfExperimentConfigSource {
         }
         return fJsonUtil.getTraceConfigIds(trace);
     }
-
-//    private static List<IDataProviderDescriptor> getDescriptors(ITmfTrace trace, String configId) {
-//        IDataProviderFactory factory = DataProviderManager.getInstance().getFactory(CustomInAndOutDataProviderFactory.PROVIDER_ID);
-//        List<IDataProviderDescriptor> descriptors = new ArrayList<>();
-//        if (factory != null) {
-//            for (IDataProviderDescriptor desc : factory.getDescriptors(trace)) {
-//                if (desc.getId().contains(configId)) {
-//                    descriptors.add(desc);
-//                }
-//            }
-//        }
-//        return descriptors;
-//    }
 }

@@ -28,7 +28,6 @@ import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
 import org.eclipse.tracecompass.tmf.core.event.aspect.TmfBaseAspects;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -569,11 +568,5 @@ public class SegmentSpecifier {
             return null;
         }
         return findInFields(event, getContextOutPattern());
-    }
-
-    public Map<String, String> getProperties() {
-        synchronized(this) {
-            return ImmutableMap.copyOf(getOrCreateConfiguration().getParameters());
-        }
     }
 }
