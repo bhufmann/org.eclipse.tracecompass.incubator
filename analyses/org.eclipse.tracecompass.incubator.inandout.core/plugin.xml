@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+<!--
    <extension
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
@@ -20,11 +21,18 @@
          </tracetype>
       </module>
    </extension>
+ !-->
    <extension
          point="org.eclipse.tracecompass.tmf.core.config">
       <source
             id="org.eclipse.tracecompass.incubator.internal.inandout.core.config"
             class="org.eclipse.tracecompass.incubator.internal.inandout.core.config.InAndOutConfigurationSource">
+      </source>
+   </extension>
+   <extension
+         point="org.eclipse.linuxtools.tmf.core.analysis">
+      <source
+            class="org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModuleSource">
       </source>
    </extension>
 </plugin>

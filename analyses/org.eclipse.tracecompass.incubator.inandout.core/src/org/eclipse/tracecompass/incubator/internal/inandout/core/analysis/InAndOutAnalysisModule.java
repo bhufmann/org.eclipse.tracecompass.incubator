@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.analysis.profiling.core.instrumented.InstrumentedCallStackAnalysis;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.Activator;
 import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider;
@@ -55,15 +56,32 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
      */
     public static final SegmentSpecifier REFERENCE = new SegmentSpecifier("latency", "(\\S*)_entry", "(\\S*)_exit", "(\\S*)_entry", "(\\S*)_exit", "CPU"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
+    private @Nullable SegmentSpecifierList fSpecifiers;
+
     @Override
     public @NonNull String getId() {
-        return ID;
+        SegmentSpecifierList specifiers = fSpecifiers;
+        if (specifiers == null || specifiers.getSpecifiers() == null) {
+            return ID;
+        }
+        return ID + specifiers.getConfiguration().getId();
+    }
+
+    public InAndOutAnalysisModule() {
+    }
+
+    public InAndOutAnalysisModule(SegmentSpecifierList specifiers) {
+        fSpecifiers = specifiers;
     }
 
     @Override
     public boolean canExecute(@NonNull ITmfTrace trace) {
-        File config = getConfig(trace);
-        return config.exists() && super.canExecute(trace);
+        SegmentSpecifierList specifiers = fSpecifiers;
+        if (specifiers == null) {
+            File config = getConfig(trace);
+            return config.exists() && super.canExecute(trace);
+        }
+        return true;
     }
 
     private static File getConfig(@NonNull ITmfTrace trace) {
@@ -80,8 +98,14 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
     @Override
     protected @NonNull ITmfStateProvider createStateProvider() {
         ITmfTrace trace = Objects.requireNonNull(getTrace(), "Trace should not be null at this point"); //$NON-NLS-1$
-        File configFile = getConfig(trace);
-        List<@NonNull SegmentSpecifier> list = read(configFile);
+        SegmentSpecifierList specifiers = fSpecifiers;
+        List<@NonNull SegmentSpecifier> list;
+        if (specifiers == null) {
+            File configFile = getConfig(trace);
+            list = read(configFile);
+        } else {
+            list = specifiers.getSpecifiers();
+        }
         return new InAndOutAnalysisStateProvider(trace, list);
     }
 
@@ -121,5 +145,9 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
         } catch (IOException e) {
             Activator.getInstance().logError(e.getMessage(), e);
         }
+    }
+
+    public @Nullable SegmentSpecifierList getSeSpecifierList() {
+        return fSpecifiers;
     }
 }
