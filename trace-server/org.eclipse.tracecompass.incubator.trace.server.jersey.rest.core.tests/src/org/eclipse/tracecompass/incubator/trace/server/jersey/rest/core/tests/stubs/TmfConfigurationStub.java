@@ -56,7 +56,7 @@ public class TmfConfigurationStub implements Serializable, ITmfConfiguration {
             @JsonProperty("name") String name,
             @JsonProperty("description") String description,
             @JsonProperty("sourceTypeId") String type,
-            @JsonProperty("parameters") Map<String, Object> parameters) {
+            @JsonProperty("parameters") Map<String, String> parameters) {
         super();
 
         TmfConfiguration.Builder builder = new TmfConfiguration.Builder()
@@ -118,7 +118,7 @@ public class TmfConfigurationStub implements Serializable, ITmfConfiguration {
     }
 
     @Override
-    public @NonNull Map<@NonNull String, @NonNull Object> getParameters() {
+    public @NonNull Map<@NonNull String, @NonNull String> getParameters() {
         return fConfig.getParameters();
     }
 }
