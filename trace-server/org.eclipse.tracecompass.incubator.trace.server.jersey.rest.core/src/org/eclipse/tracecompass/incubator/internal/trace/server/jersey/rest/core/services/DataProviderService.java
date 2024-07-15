@@ -12,7 +12,6 @@
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ANN;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.CFG_CONFIG_ID;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.CFG_TYPE_ID;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.COLUMNS;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.COLUMNS_EX;
@@ -84,7 +83,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -1134,194 +1132,64 @@ public class DataProviderService {
     }
 
     @GET
-    @Path("/timeGraph/{outputId}/config/types/")
+    @Path("/{outputId}/configTypes/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfigurationTypes(
             @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
             @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId
             ) {
-        System.out.println("Get timegraph all configuration types:");
+        System.out.println("GET all configuration types for a given output:");
         System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph outputId: " + outputId);
+        System.out.println("outputId: " + outputId);
         System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("Get timegraph all configuration types").build(); //$NON-NLS-1$
+        return Response.status(Status.NOT_IMPLEMENTED).entity("Get all configuration types for a given output").build(); //$NON-NLS-1$
     }
 
     @GET
-    @Path("/timeGraph/{outputId}/config/types/{typeId}")
+    @Path("/{outputId}/configTypes/{typeId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfigurationType(
             @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
             @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
             @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId) {
-        System.out.println("Get timegraph configuration type:");
+        System.out.println("GET a configuration type for a given output:");
         System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph outputId: " + outputId);
+        System.out.println("outputId: " + outputId);
         System.out.println("typeId: " + typeId);
         System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("Get timegraph configuration type").build(); //$NON-NLS-1$
-    }
-
-    @GET
-    @Path("/timeGraph/{outputId}/config/types/{typeId}/configs")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getConfigurations(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId) {
-        System.out.println("Get timegraph configuration instances of a given type:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph outputId: " + outputId);
-        System.out.println("typeId: " + typeId);
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("Get timegraph configuration instances of a given type").build(); //$NON-NLS-1$
+        return Response.status(Status.NOT_IMPLEMENTED).entity("Get a configuration type for a given output").build(); //$NON-NLS-1$
     }
 
     @POST
-    @Path("/timeGraph/{outputId}/config/types/{typeId}/configs")
+    @Path("/{outputId}/")
     @Tag(name = DT)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createConfiguration(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId,
-            QueryParameters queryParameters) {
-        System.out.println("POST timegraph configuration instance for a given type:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("typeId: " + typeId);
-        System.out.println("queryParams: " + queryParameters.toString());
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("POST timegraph configuration instance for a given type").build(); //$NON-NLS-1$
-    }
-
-    @PUT
-    @Path("/timeGraph/{outputId}/config/types/{typeId}/configs/{configId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response putConfiguration(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId,
-            @Parameter(description = CFG_CONFIG_ID) @PathParam("configId") String configId,
-            QueryParameters queryParameters) {
-        System.out.println("PUT timegraph configuration instance for a given type/config:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("typeId: " + typeId);
-        System.out.println("configId: " + configId);
-        System.out.println("queryParams: " + queryParameters.toString());
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("PUT timegraph configuration instance for a given type/config").build(); //$NON-NLS-1$
-    }
-
-    /**
-     * GET a custom configuration by ID
-     *
-     * @param typeId
-     *            the configuration source type ID
-     * @param configId
-     *            the configuration instance ID
-     * @return status and the configuration instance, if successful
-     */
-    @GET
-    @Path("/timeGraph/{outputId}/config/types/{typeId}/configs/{configId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getConfiguration(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId,
-            @Parameter(description = CFG_CONFIG_ID) @PathParam("configId") String configId) {
-        System.out.println("GET timegraph configuration instance for a given type/config:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("typeId: " + typeId);
-        System.out.println("configId: " + configId);
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("GET timegraph configuration instance for a given type/config").build(); //$NON-NLS-1$
-    }
-
-    @DELETE
-    @Path("/timeGraph/{outputId}/config/types/{typeId}/configs/{configId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteConfiguration(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @Parameter(description = CFG_TYPE_ID) @PathParam("typeId") String typeId,
-            @Parameter(description = CFG_CONFIG_ID) @PathParam("configId") String configId) {
-        System.out.println("DELETE timegraph configuration instance for a given type/config:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("typeId: " + typeId);
-        System.out.println("configId: " + configId);
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("DELETE timegraph configuration instance for a given type/config").build(); //$NON-NLS-1$
-    }
-
-    @GET
-    @Path("/timeGraph/{outputId}/config/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getExpConfigurations(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId) {
-        System.out.println("GET all configuration instances of a given timegraph:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("GET all configuration instances of a given timegraph").build(); //$NON-NLS-1$
-    }
-
-    @POST
-    @Path("/timeGraph/{outputId}/")
-    @Tag(name = DT)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-        public Response applyConfiguration(
+        public Response createDataProvider(
                 @PathParam("expUUID") UUID expUUID,
                 @PathParam("outputId") String outputId,
                 QueryParameters queryParameters) {
-        System.out.println("POST a configuration instance (apply) to a given timegraph:");
+        System.out.println("POST a configuration to a given output to create derived output:");
         System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
+        System.out.println("output: " + outputId);
         System.out.println("queryParams: " + queryParameters.toString());
         System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("POST a configuration instance (apply) to a given timegraph").build(); //$NON-NLS-1$
+        return Response.status(Status.NOT_IMPLEMENTED).entity("POST a configuration to a given output to create derived output").build(); //$NON-NLS-1$
     }
-
-    @PUT
-    @Path("/timeGraph/{outputId}/{derivedOutputId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response putDerivedConfiguration(
-            @PathParam("expUUID") UUID expUUID,
-            @PathParam("outputId") String outputId,
-            @PathParam("derivedOutputId") String derivedOutputId,
-            QueryParameters queryParameters) {
-        System.out.println("PUT a configuration instance (re-apply) to a given timegraph:");
-        System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
-        System.out.println("derived outputId: " + derivedOutputId);
-        System.out.println("queryParams: " + queryParameters.toString());
-        System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("PUT a configuration instance (re-apply) to a given timegraph").build(); //$NON-NLS-1$
-    }
-
 
     @DELETE
-    @Path("/timeGraph/{outputId}/{derivedOutputId}")
+    @Path("/{outputId}/{derivedOutputId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteDerivedTimeGraph(
+    public Response deleteDerivedOutput(
             @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
             @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
             @PathParam("derivedOutputId") String derivedOutputId) {
-        System.out.println("DELETE derived timegraph output");
+        System.out.println("DELETE a derived output");
         System.out.println("experiment: " + expUUID);
-        System.out.println("timegraph output: " + outputId);
+        System.out.println("output: " + outputId);
         System.out.println("derived outputId: " + derivedOutputId);
         System.out.println("===========================");
-        return Response.status(Status.NOT_IMPLEMENTED).entity("DELETE derived timegraph output").build(); //$NON-NLS-1$
-
+        return Response.status(Status.NOT_IMPLEMENTED).entity("DELETE derived  output").build(); //$NON-NLS-1$
     }
 
     private static Response validateParameters(String outputId, QueryParameters queryParameters) {
