@@ -52,12 +52,12 @@ public class SegmentSpecifierList {
         }.getType();
         List<SegmentSpecifier> specifiers = Collections.emptyList();
 
-        String json = config.getParameters().get("json");
-        if (json == null) {
+        Object json = config.getParameters().get("json");
+        if (!(json instanceof String) ) {
             return specifiers;
         }
         try {
-            List<SegmentSpecifier> list = new Gson().fromJson(json, listType);
+            List<SegmentSpecifier> list = new Gson().fromJson((String) json, listType);
             if (list != null) {
                 specifiers = list;
             }

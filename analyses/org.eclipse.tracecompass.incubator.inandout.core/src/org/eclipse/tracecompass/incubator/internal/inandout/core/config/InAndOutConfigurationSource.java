@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 /**
- * Implementation of {@link ITmfConfigurationSource} for managing InAndOut configuration.
+ * Implementation of {@link ITmfDataProviderConfigSource} for managing InAndOut configuration.
  *
  * @author Bernd Hufmann
  */
@@ -114,7 +114,12 @@ public class InAndOutConfigurationSource implements ITmfDataProviderConfigSource
     }
 
     @Override
-    public ITmfConfiguration create(Map<String, Object> parameters) throws TmfConfigurationException {
+    public ITmfConfiguration create(Map<String, Object> parameters, ITmfTrace trace, String srcDataProviderId) throws TmfConfigurationException {
+        Object json = parameters.get(TmfConfiguration.JSON_STRING_KEY);
+        if (!(json instanceof String)) {
+            throw new TmfConfigurationException("No name json input provided or not a string");
+        }
+
         Object labelObj = parameters.get(NAME);
         if (!(labelObj instanceof String)) {
             throw new TmfConfigurationException("No name json input provided or not a string"); //$NON-NLS-1$
@@ -150,38 +155,38 @@ public class InAndOutConfigurationSource implements ITmfDataProviderConfigSource
         return config;
     }
 
-    @Override
-    public @Nullable ITmfConfiguration get(String id) {
-        return fConfigurations.get(id);
-    }
+//    @Override
+//    public @Nullable ITmfConfiguration get(String id) {
+//        return fConfigurations.get(id);
+//    }
 
-    @Override
-    public ITmfConfiguration update(String id, Map<String, Object> parameters) throws TmfConfigurationException {
-        ITmfConfiguration config = fConfigurations.get(id);
-        if (config == null) {
-            throw new TmfConfigurationException("No such configuration with ID: " + id); //$NON-NLS-1$
-        }
-        throw new TmfConfigurationException("Update configuration not supported!"); //$NON-NLS-1$
-    }
+//    @Override
+//    public ITmfConfiguration update(String id, Map<String, Object> parameters) throws TmfConfigurationException {
+//        ITmfConfiguration config = fConfigurations.get(id);
+//        if (config == null) {
+//            throw new TmfConfigurationException("No such configuration with ID: " + id); //$NON-NLS-1$
+//        }
+//        throw new TmfConfigurationException("Update configuration not supported!"); //$NON-NLS-1$
+//    }
 
-    @Override
-    public @Nullable ITmfConfiguration remove(String id) {
-        ITmfConfiguration config = fConfigurations.remove(id);
-        if (config != null) {
-            fJsonUtil.deleteConfiguration(config);
-        }
-        return config;
-    }
-
-    @Override
-    public List<ITmfConfiguration> getConfigurations() {
-        return ImmutableList.copyOf(fConfigurations.values());
-    }
-
-    @Override
-    public boolean contains(String id) {
-        return fConfigurations.containsKey(id);
-    }
+//    @Override
+//    public @Nullable ITmfConfiguration remove(String id) {
+//        ITmfConfiguration config = fConfigurations.remove(id);
+//        if (config != null) {
+//            fJsonUtil.deleteConfiguration(config);
+//        }
+//        return config;
+//    }
+//
+//    @Override
+//    public List<ITmfConfiguration> getConfigurations() {
+//        return ImmutableList.copyOf(fConfigurations.values());
+//    }
+//
+//    @Override
+//    public boolean contains(String id) {
+//        return fConfigurations.containsKey(id);
+//    }
 
     @Override
     public void dispose() {
@@ -189,22 +194,22 @@ public class InAndOutConfigurationSource implements ITmfDataProviderConfigSource
         TmfSignalManager.deregister(this);
     }
 
-    @Override
-    public ITmfConfiguration create(Map<String, Object> parameters, ITmfTrace trace, String srcDataProviderId) throws TmfConfigurationException {
-
-
-        ITmfConfiguration config = fConfigurations.get(configId);
-        if (config == null) {
-            throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
-        }
-        appendConfigId(trace, config);
-        InAndOutAnalysisModuleSource.notifyModuleChange();
-        for (ITmfTrace tr : TmfTraceManager.getTraceSet(trace)) {
-            tr.refreshAnalysisModules();
-        }
-        // FIXME: config is applied to all traces in the experiment and should be per trace
-        return config;
-    }
+//    @Override
+//    public ITmfConfiguration create(Map<String, Object> parameters, ITmfTrace trace, String srcDataProviderId) throws TmfConfigurationException {
+//
+//
+//        ITmfConfiguration config = fConfigurations.get(configId);
+//        if (config == null) {
+//            throw new TmfConfigurationException("No such configuration with ID: " + configId); //$NON-NLS-1$
+//        }
+//        appendConfigId(trace, config);
+//        InAndOutAnalysisModuleSource.notifyModuleChange();
+//        for (ITmfTrace tr : TmfTraceManager.getTraceSet(trace)) {
+//            tr.refreshAnalysisModules();
+//        }
+//        // FIXME: config is applied to all traces in the experiment and should be per trace
+//        return config;
+//    }
 
     @Override
     @Nullable ITmfConfiguration remove(String id, ITmfTrace trace, String srcDataProviderId) {
