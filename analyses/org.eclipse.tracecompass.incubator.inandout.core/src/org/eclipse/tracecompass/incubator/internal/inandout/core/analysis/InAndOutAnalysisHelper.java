@@ -23,7 +23,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
 
     private static final String ICON_ANALYSIS = "/icons/inandout.png"; //$NON-NLS-1$
 
-    private final SegmentSpecifierList fSpecifiers;
+    private final SegmentSpecifierConfiguration fSpecifiers;
     private final String fId;
 
     /**
@@ -38,7 +38,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
      */
     public InAndOutAnalysisHelper(ITmfConfiguration config) {
         fId =  InAndOutAnalysisModule.ID + config.getId();
-        fSpecifiers = new SegmentSpecifierList(config);
+        fSpecifiers = new SegmentSpecifierConfiguration(config);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
     @Override
     public String getName() {
         StringBuilder builder = new StringBuilder("Custom InAndOut Analysis Module");
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers != null) {
             builder.append('(')
                 .append(specifiers.getConfiguration().getName())
@@ -139,7 +139,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
     @Override
     public String getHelpText() {
         StringBuilder builder = new StringBuilder("Custom InAndOut Analysis Module");
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers != null) {
             builder.append("for configuration: ")
                 .append(specifiers.getConfiguration().getName());
@@ -149,7 +149,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
 
     @Override
     public final @Nullable IAnalysisModule newModule(ITmfTrace trace) throws TmfAnalysisException {
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers == null) {
             return null;
         }

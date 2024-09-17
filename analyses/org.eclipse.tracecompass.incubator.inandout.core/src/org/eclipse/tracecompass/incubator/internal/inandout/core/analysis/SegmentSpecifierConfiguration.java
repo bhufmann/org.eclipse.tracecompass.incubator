@@ -29,12 +29,15 @@ import com.google.gson.reflect.TypeToken;
  * Model of Segment specifiers
  */
 @NonNullByDefault
-public class SegmentSpecifierList {
-
+public class SegmentSpecifierConfiguration {
+    private private String fName;
+    private String fDescription;
+    private String fId;
     private @Nullable List<SegmentSpecifier> fSpecifiers;
+
     private ITmfConfiguration fConfig;
 
-    SegmentSpecifierList(ITmfConfiguration config) {
+    SegmentSpecifierConfiguration(ITmfConfiguration config) {
         fConfig = config;
         fSpecifiers = read(config);
     }

@@ -56,11 +56,11 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
      */
     public static final SegmentSpecifier REFERENCE = new SegmentSpecifier("latency", "(\\S*)_entry", "(\\S*)_exit", "(\\S*)_entry", "(\\S*)_exit", "CPU"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
-    private @Nullable SegmentSpecifierList fSpecifiers;
+    private @Nullable SegmentSpecifierConfiguration fSpecifiers;
 
     @Override
     public @NonNull String getId() {
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers == null || specifiers.getSpecifiers() == null) {
             return ID;
         }
@@ -70,13 +70,13 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
     public InAndOutAnalysisModule() {
     }
 
-    public InAndOutAnalysisModule(SegmentSpecifierList specifiers) {
+    public InAndOutAnalysisModule(SegmentSpecifierConfiguration specifiers) {
         fSpecifiers = specifiers;
     }
 
     @Override
     public boolean canExecute(@NonNull ITmfTrace trace) {
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers == null) {
             File config = getConfig(trace);
             return config.exists() && super.canExecute(trace);
@@ -98,7 +98,7 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
     @Override
     protected @NonNull ITmfStateProvider createStateProvider() {
         ITmfTrace trace = Objects.requireNonNull(getTrace(), "Trace should not be null at this point"); //$NON-NLS-1$
-        SegmentSpecifierList specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fSpecifiers;
         List<@NonNull SegmentSpecifier> list;
         if (specifiers == null) {
             File configFile = getConfig(trace);
@@ -147,7 +147,7 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
         }
     }
 
-    public @Nullable SegmentSpecifierList getSeSpecifierList() {
+    public @Nullable SegmentSpecifierConfiguration getSeSpecifierList() {
         return fSpecifiers;
     }
 }

@@ -29,7 +29,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.Activator;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModule;
 import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.InAndOutAnalysisModuleSource;
-import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.SegmentSpecifierList;
+import org.eclipse.tracecompass.incubator.internal.inandout.core.analysis.SegmentSpecifierConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
@@ -221,7 +221,7 @@ public class InAndOutConfigurationSource implements ITmfDataProviderConfigSource
         Iterator<InAndOutAnalysisModule> csModules = TmfTraceUtils.getAnalysisModulesOfClass(trace, InAndOutAnalysisModule.class).iterator();
         while (csModules.hasNext()) {
             InAndOutAnalysisModule csModule = csModules.next();
-            SegmentSpecifierList specifiers = csModule.getSeSpecifierList();
+            SegmentSpecifierConfiguration specifiers = csModule.getSeSpecifierList();
 
             if (specifiers != null && specifiers.getConfiguration().getId().equals(configId)) {
 //                ITmfTreeDataProvider<?> dp = DataProviderManager.getInstance().getExistingDataProvider(trace, generateDpId(csModule.getId()), ITmfTreeDataProvider.class);
