@@ -11,7 +11,6 @@ import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisManager;
 import org.eclipse.tracecompass.tmf.core.analysis.requirements.TmfAbstractAnalysisRequirement;
-import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceManager;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfAnalysisException;
@@ -36,9 +35,9 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
      * @param type
      *            TODO
      */
-    public InAndOutAnalysisHelper(ITmfConfiguration config) {
+    public InAndOutAnalysisHelper(SegmentSpecifierConfiguration config) {
         fId =  InAndOutAnalysisModule.ID + config.getId();
-        fSpecifiers = new SegmentSpecifierConfiguration(config);
+        fSpecifiers = config;
     }
 
     @Override
@@ -129,7 +128,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
         SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers != null) {
             builder.append('(')
-                .append(specifiers.getConfiguration().getName())
+                .append(specifiers.getName())
                 .append(')');
 
         }
@@ -142,7 +141,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
         SegmentSpecifierConfiguration specifiers = fSpecifiers;
         if (specifiers != null) {
             builder.append("for configuration: ")
-                .append(specifiers.getConfiguration().getName());
+                .append(specifiers.getName());
         }
         return builder.toString();
     }
@@ -158,7 +157,7 @@ public class InAndOutAnalysisHelper implements IAnalysisModuleHelper, ITmfProper
             return null;
         }
 
-        if (!((InAndOutConfigurationSource) configSource).appliesToTrace(trace, specifiers.getConfiguration().getId())) {
+        if (!((InAndOutConfigurationSource) configSource).appliesToTrace(trace, specifiers.getId())) {
             return null;
         }
 

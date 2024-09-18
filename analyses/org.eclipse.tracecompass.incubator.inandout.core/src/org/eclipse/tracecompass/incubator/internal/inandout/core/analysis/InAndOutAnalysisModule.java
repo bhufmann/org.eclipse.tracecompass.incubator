@@ -56,27 +56,27 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
      */
     public static final SegmentSpecifier REFERENCE = new SegmentSpecifier("latency", "(\\S*)_entry", "(\\S*)_exit", "(\\S*)_entry", "(\\S*)_exit", "CPU"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
-    private @Nullable SegmentSpecifierConfiguration fSpecifiers;
+    private @Nullable SegmentSpecifierConfiguration fConfiguartion;
 
     @Override
     public @NonNull String getId() {
-        SegmentSpecifierConfiguration specifiers = fSpecifiers;
-        if (specifiers == null || specifiers.getSpecifiers() == null) {
+        SegmentSpecifierConfiguration config = fConfiguartion;
+        if (config == null || config.getSpecifiers() == null) {
             return ID;
         }
-        return ID + specifiers.getConfiguration().getId();
+        return ID + config.getId();
     }
 
     public InAndOutAnalysisModule() {
     }
 
     public InAndOutAnalysisModule(SegmentSpecifierConfiguration specifiers) {
-        fSpecifiers = specifiers;
+        fConfiguartion = specifiers;
     }
 
     @Override
     public boolean canExecute(@NonNull ITmfTrace trace) {
-        SegmentSpecifierConfiguration specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fConfiguartion;
         if (specifiers == null) {
             File config = getConfig(trace);
             return config.exists() && super.canExecute(trace);
@@ -98,7 +98,7 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
     @Override
     protected @NonNull ITmfStateProvider createStateProvider() {
         ITmfTrace trace = Objects.requireNonNull(getTrace(), "Trace should not be null at this point"); //$NON-NLS-1$
-        SegmentSpecifierConfiguration specifiers = fSpecifiers;
+        SegmentSpecifierConfiguration specifiers = fConfiguartion;
         List<@NonNull SegmentSpecifier> list;
         if (specifiers == null) {
             File configFile = getConfig(trace);
@@ -148,6 +148,6 @@ public class InAndOutAnalysisModule extends InstrumentedCallStackAnalysis {
     }
 
     public @Nullable SegmentSpecifierConfiguration getSeSpecifierList() {
-        return fSpecifiers;
+        return fConfiguartion;
     }
 }

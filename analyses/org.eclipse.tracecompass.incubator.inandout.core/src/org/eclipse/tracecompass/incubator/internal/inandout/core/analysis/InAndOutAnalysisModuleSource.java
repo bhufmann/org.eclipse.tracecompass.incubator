@@ -20,7 +20,7 @@ import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleSource;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisManager;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
-import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSource;
+import org.eclipse.tracecompass.tmf.core.config.ITmfDataProviderConfigSource;
 import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceManager;
 
 /**
@@ -50,13 +50,15 @@ public class InAndOutAnalysisModuleSource implements IAnalysisModuleSource {
 
     private static List<IAnalysisModuleHelper> populateAnalysisModules() {
         List<IAnalysisModuleHelper> modules = new ArrayList<>();
-        ITmfConfigurationSource configSource = TmfConfigurationSourceManager.getInstance().getConfigurationSource(InAndOutConfigurationSource.IN_AND_OUT_CONFIG_SOURCE_TYPE_ID);
+        ITmfDataProviderConfigSource configSource = TmfConfigurationSourceManager.getInstance().getDataProviderConfigurationSource(InAndOutConfigurationSource.IN_AND_OUT_CONFIG_SOURCE_TYPE_ID);
         if (configSource != null) {
             List<ITmfConfiguration> configurations = configSource.getConfigurations();
             for (ITmfConfiguration config : configurations) {
                 // TODO validate
-                IAnalysisModuleHelper helper = new InAndOutAnalysisHelper(config);
-                modules.add(helper);
+                if (config instanceof SegmentSpecifierConfiguration) {
+                    IAnalysisModuleHelper helper = new InAndOutAnalysisHelper((SegmentSpecifierConfiguration) config);
+                    modules.add(helper);
+                }
             }
         }
         return modules;

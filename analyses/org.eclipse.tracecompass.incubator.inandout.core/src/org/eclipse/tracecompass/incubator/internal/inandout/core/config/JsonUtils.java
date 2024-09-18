@@ -20,7 +20,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -67,33 +66,6 @@ public final class JsonUtils {
     }
 
     /**
-     * Get the path where the config files are stored. Create it if it does not
-     * exist
-     *
-     * @return path to config files
-     */
-    public IPath getFilesPath() {
-        String rootDir = null;
-        IPath path = null;
-        try {
-            path = Activator.getInstance().getStateLocation();
-        } catch (Exception e) {
-            // platform not running
-            rootDir = TmfTraceManager.getTemporaryDirPath();
-            path = new Path(rootDir);
-        }
-        path = path.addTrailingSeparator().append(fSubFolderName);
-
-        /* Check if directory exists, otherwise create it */
-        File dir = path.toFile();
-        if (!dir.exists() || !dir.isDirectory()) {
-            dir.mkdirs();
-        }
-
-        return path;
-    }
-
-    /**
      * Validate the config file input as JSON
      *
      * @param file
@@ -119,56 +91,6 @@ public final class JsonUtils {
 
         }
         return Status.OK_STATUS;
-    }
-
-    /**
-     * List all configurations in global storage directory.
-     *
-     * @return A list with all the configurations
-     */
-    public synchronized List<ITmfConfiguration> readConfigurations() {
-        IPath pathToFiles = getFilesPath();
-        File folder = pathToFiles.toFile();
-        return readConfigurations(folder);
-    }
-
-    /**
-     * Delete a configuration from global config
-     *
-     * @param config
-     *            The config to delete
-     */
-    public void deleteConfiguration(ITmfConfiguration config) {
-        IPath pathToFiles = getFilesPath();
-        File file = pathToFiles.addTrailingSeparator().append(config.getId()).append(JSON_EXTENSION).toFile();
-        deleteFile(file);
-    }
-
-    /**
-     * Copy configuration to trace supplementary folder
-     *
-     * @param config
-     *            The configuration to copy
-     * @param trace
-     *            The trace
-     * @throws TmfConfigurationException
-     *             if an error occurs
-     */
-    public void copyToTrace(ITmfConfiguration config, ITmfTrace trace) throws TmfConfigurationException {
-        IPath path = getTraceRootFolder(trace);
-        File dir = path.toFile();
-        if (!dir.exists()) {
-            if (!dir.mkdir()) {
-                throw new TmfConfigurationException("Error creating supplementary folder: " + dir.getName()); //$NON-NLS-1$
-            }
-        }
-        if (!dir.isDirectory()) {
-            throw new TmfConfigurationException("Supplementary folder is not a folder: " + dir.getName()); //$NON-NLS-1$
-        }
-        File toFile = path.addTrailingSeparator().append(config.getId()).addFileExtension(JSON_EXTENSION).toFile();
-        IPath pathToFiles = getFilesPath();
-        File fromFile = pathToFiles.addTrailingSeparator().append(config.getId()).addFileExtension(JSON_EXTENSION).toFile();
-        copyFile(fromFile, toFile);
     }
 
     /**
@@ -244,8 +166,8 @@ public final class JsonUtils {
      * @throws TmfConfigurationException
      *             if an error occurred
      */
-    public void writeConfiguration(ITmfConfiguration config) throws TmfConfigurationException {
-        IPath pathToFiles = getFilesPath();
+    public void writeConfiguration(ITmfTrace trace, ITmfConfiguration config, String srcDataProviderId) throws TmfConfigurationException {
+        IPath pathToFiles = getTraceRootFolder(trace, srcDataProviderId);
         File file = pathToFiles.addTrailingSeparator().append(config.getId()).addFileExtension(JSON_EXTENSION).toFile();
         try (Writer writer = new FileWriter(file)) {
             writer.append(new Gson().toJson(config));
@@ -255,7 +177,7 @@ public final class JsonUtils {
     }
 
     @SuppressWarnings("null")
-    private IPath getTraceRootFolder(ITmfTrace trace) {
+    private IPath getTraceRootFolder(ITmfTrace trace, String srcDataProviderId) {
         String supplFolder = TmfTraceManager.getSupplementaryFileDir(trace);
         IPath supplPath = new Path(supplFolder);
         supplPath = supplPath.addTrailingSeparator().append(fSubFolderName);
@@ -306,14 +228,6 @@ public final class JsonUtils {
             } catch (IOException e) {
                 Activator.getInstance().logError("Error deleting In-And-Out File " + file.getAbsolutePath(), e); //$NON-NLS-1$
             }
-        }
-    }
-
-    private static void copyFile(File fromFile, File toFile) throws TmfConfigurationException {
-        try {
-            Files.copy(fromFile.toPath(), toFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new TmfConfigurationException("Error copying file: " + fromFile.getName()); //$NON-NLS-1$
         }
     }
 }

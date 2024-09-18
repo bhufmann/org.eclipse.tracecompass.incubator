@@ -11,8 +11,6 @@
 
 package org.eclipse.tracecompass.incubator.internal.inandout.core.analysis;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -20,9 +18,6 @@ import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tracecompass.incubator.internal.inandout.core.config.InAndOutConfigurationSource;
-import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
-import org.eclipse.tracecompass.tmf.core.config.TmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
 import org.eclipse.tracecompass.tmf.core.event.aspect.TmfBaseAspects;
@@ -41,24 +36,6 @@ import com.google.gson.annotations.SerializedName;
  * @author Matthew Khouzam
  */
 public class SegmentSpecifier {
-
-    public static final String LABEL_KEY = "label"; //$NON-NLS-1$
-    public static final String LABEL_DESCRIPTION = "Label of InAndOut configuration"; //$NON-NLS-1$
-
-    public static final String IN_REGEX_KEY = "inRegex"; //$NON-NLS-1$
-    public static final String IN_REGEX_DESCRIPTION = "InRegex of InAndOut configuration"; //$NON-NLS-1$
-
-    public static final String OUT_REGEX_KEY = "outRegex"; //$NON-NLS-1$
-    public static final String OUT_REGEX_DESCRIPTION = "OutRegex of InAndOut configuration"; //$NON-NLS-1$
-
-    public static final String CONTEXT_IN_REGEX_KEY = "contextInRegex"; //$NON-NLS-1$
-    public static final String CONTEXT_IN_REGEX_DESCRIPTION = "ContextInRegex of InAndOut configuration"; //$NON-NLS-1$
-
-    public static final String CONTEXT_OUT_REGEX_KEY = "contextOutRegex"; //$NON-NLS-1$
-    public static final String CONTEXT_OUT_REGEX_DESCRIPTION = "ContextOutRegex of InAndOut configuration"; //$NON-NLS-1$
-
-    public static final String CLASSIFIER_KEY = "classifier"; //$NON-NLS-1$
-    public static final String CLASSIFIER_DESCRIPTION = "Classifier of InAndOut configuration"; //$NON-NLS-1$
 
     private static final String ALL = "all"; //$NON-NLS-1$
 
@@ -145,8 +122,6 @@ public class SegmentSpecifier {
     private transient @Nullable Pattern fContextInPattern;
     private transient @Nullable Pattern fContextOutPattern;
 
-    private transient @Nullable ITmfConfiguration fConfig;
-
     /**
      * Default constructor for GSON
      */
@@ -172,7 +147,6 @@ public class SegmentSpecifier {
         fContextInRegex = other.fContextInRegex;
         fContextOutRegex = other.fContextOutRegex;
         fClassifier = other.fClassifier;
-        fConfig = getOrCreateConfiguration();
     }
 
     /**
@@ -200,23 +174,6 @@ public class SegmentSpecifier {
         fContextInRegex = contextInRegex;
         fContextOutRegex = contextOutRegex;
         fClassifier = classifier;
-    }
-
-    /**
-     * Constructor
-     *
-     * @param config
-     *            The corresponding {@link ITmfConfiguration}.
-     *            Parameter map must be validated before.
-     */
-    public SegmentSpecifier(ITmfConfiguration config) {
-        fConfig = config;
-        fLabel = config.getParameters().get(LABEL_KEY);
-        fInRegex = config.getParameters().get(IN_REGEX_KEY);
-        fOutRegex = config.getParameters().get(OUT_REGEX_KEY);
-        fContextInRegex = config.getParameters().get(CONTEXT_IN_REGEX_KEY);
-        fContextOutRegex = config.getParameters().get(CONTEXT_OUT_REGEX_KEY);
-        fClassifier = config.getParameters().get(CLASSIFIER_KEY);
     }
 
     /**
@@ -271,22 +228,6 @@ public class SegmentSpecifier {
      */
     public String getClassifierType() {
         return fClassifier;
-    }
-
-    /**
-     * @return the unique config ID
-     */
-    public synchronized String getId() {
-        ITmfConfiguration config = getOrCreateConfiguration();
-        return config.getId();
-    }
-
-    /**
-     * @return the name of the config
-     */
-    public synchronized String getName() {
-        ITmfConfiguration config = getOrCreateConfiguration();
-        return config.getName();
     }
 
     @Override
@@ -533,27 +474,6 @@ public class SegmentSpecifier {
         if (newString != null) {
             consumer.accept(newString);
         }
-    }
-
-    private ITmfConfiguration getOrCreateConfiguration() {
-        ITmfConfiguration config = fConfig;
-        if (config == null) {
-            Map<String, String> map = new HashMap<>();
-            map.put(LABEL_KEY, fLabel);
-            map.put(IN_REGEX_KEY, fInRegex);
-            map.put(OUT_REGEX_KEY, fOutRegex);
-            map.put(CONTEXT_IN_REGEX_KEY, fContextInRegex);
-            map.put(CONTEXT_OUT_REGEX_KEY, fContextOutRegex);
-            map.put(CLASSIFIER_KEY, fClassifier);
-            TmfConfiguration.Builder builder = new TmfConfiguration.Builder()
-                    .setName(fLabel)
-                    .setDescription(InAndOutConfigurationSource.DESCRIPTION)
-                    .setSourceTypeId(InAndOutConfigurationSource.IN_AND_OUT_CONFIG_SOURCE_TYPE_ID) // TODO circular dependency InAndOutConfigurationSource <-> SegmentSpecifier
-                    .setParameters(map);
-            config = builder.build();
-            fConfig = config;
-        }
-        return config;
     }
 
     /**
