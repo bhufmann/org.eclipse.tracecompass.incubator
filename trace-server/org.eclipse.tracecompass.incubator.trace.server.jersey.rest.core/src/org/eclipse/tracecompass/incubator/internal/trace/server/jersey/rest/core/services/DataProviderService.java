@@ -182,7 +182,6 @@ import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 import org.w3c.dom.Element;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -202,7 +201,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  *
  * @author Loic Prieur-Drevon
  */
-@SuppressWarnings("restriction")
+@SuppressWarnings({"restriction", "unchecked", "null"})
 @Path("/experiments/{expUUID}/outputs")
 public class DataProviderService {
 
@@ -276,6 +275,10 @@ public class DataProviderService {
         TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
         if (experiment == null) {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+        }
+
+        if (outputId == null) {
+            return Response.status(Status.BAD_REQUEST).entity(MISSING_OUTPUTID).build();
         }
 
         IDataProviderDescriptor provider = getDescriptor(experiment, outputId);
@@ -388,14 +391,16 @@ public class DataProviderService {
         if (errorResponse != null) {
             return errorResponse;
         }
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getXY") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+
+        try (
+        FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getXY") //$NON-NLS-1$
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfTreeXYDataProvider<@NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
+            @Nullable ITmfTreeXYDataProvider<@NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
                     outputId, ITmfTreeXYDataProvider.class);
 
             if (provider == null) {
@@ -517,7 +522,7 @@ public class DataProviderService {
             return errorResponse;
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getStates") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -583,7 +588,7 @@ public class DataProviderService {
             return errorResponse;
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getArrows") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -747,7 +752,7 @@ public class DataProviderService {
             return errorResponse;
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getAnnotations") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -840,7 +845,7 @@ public class DataProviderService {
             return errorResponse;
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getTimeGraphTooltip") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -864,8 +869,8 @@ public class DataProviderService {
         }
     }
 
-    private ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> getTimeGraphProvider(@NonNull ITmfTrace trace, String outputId) {
-        ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = manager.getOrCreateDataProvider(trace,
+    private @Nullable ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> getTimeGraphProvider(@NonNull ITmfTrace trace, String outputId) {
+        @Nullable ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = manager.getOrCreateDataProvider(trace,
                 outputId, ITimeGraphDataProvider.class);
 
         if (provider == null && outputId != null) {
@@ -962,7 +967,7 @@ public class DataProviderService {
             return errorResponse;
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getLines") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -983,7 +988,7 @@ public class DataProviderService {
             if (response.getStatus() == ITmfResponse.Status.FAILED) {
                 return Response.status(Status.BAD_REQUEST).entity(response.getStatusMessage()).build();
             }
-            return Response.ok(new TmfModelResponse<>(new VirtualTableModelWrapper((ITmfVirtualTableModel) response.getModel()), response.getStatus(), response.getStatusMessage())).build();
+            return Response.ok(new TmfModelResponse<>(new VirtualTableModelWrapper((ITmfVirtualTableModel<?>) response.getModel()), response.getStatus(), response.getStatusMessage())).build();
         }
     }
 
@@ -1000,7 +1005,7 @@ public class DataProviderService {
      * @return the provider if an XML containing the ID exists and applies to
      *         the trace, else null
      */
-    private static <@Nullable P extends ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel>> P getXmlProvider(@NonNull ITmfTrace trace, @NonNull String id, EnumSet<OutputType> types) {
+    private static @Nullable <@Nullable P extends ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel>> P getXmlProvider(@NonNull ITmfTrace trace, @NonNull String id, EnumSet<OutputType> types) {
         for (OutputType viewType : types) {
             for (XmlOutputElement element : Iterables.filter(XmlUtils.getXmlOutputElements().values(),
                     element -> element.getXmlElem().equals(viewType.getXmlElem()) && id.equals(element.getId()))) {
@@ -1064,7 +1069,7 @@ public class DataProviderService {
             return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getTree") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -1086,7 +1091,6 @@ public class DataProviderService {
             if (timeRequested == null || timeRequested.isEmpty()) {
                 // Make a shallow copy to be able to modify the map
                 params = new HashMap<>(params);
-                timeRequested = ImmutableList.of(experiment.getStartTime().toNanos(), experiment.getEndTime().toNanos());
                 params.put(DataProviderParameterUtils.REQUESTED_TIME_KEY, timeRequested);
             }
             TmfModelResponse<?> treeResponse = provider.fetchTree(params, null);
@@ -1131,7 +1135,7 @@ public class DataProviderService {
         }
         Map<String, Object> params = queryParameters.getParameters();
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getStyles") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
@@ -1249,7 +1253,7 @@ public class DataProviderService {
         Optional<ITmfConfigurationSourceType> optional = configurator.getConfigurationSourceTypes().stream().filter(type -> type.getId().equals(typeId)).findAny();
 
         if (!optional.isPresent()) {
-            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_CONFIGURATION_TYPE).build(); //$NON-NLS-1$
+            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_CONFIGURATION_TYPE).build();
         }
         return Response.ok(optional.get()).build();
     }
@@ -1266,7 +1270,6 @@ public class DataProviderService {
      *            the query parameters used to create a output provider
      * @return a list of data provider descriptors
      */
-    @SuppressWarnings("null")
     @POST
     @Path("/{outputId}")
     @Tag(name = OCG)
@@ -1284,16 +1287,15 @@ public class DataProviderService {
                         @Content(examples = @ExampleObject(DP_CFG_EX), schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.OutputConfigurationQueryParameters.class))
                 }, required = true) OutputConfigurationQueryParameters queryParameters) {
 
+        Response errorResponse = validateOutputConfigParameters(outputId, queryParameters);
+        if (errorResponse != null) {
+            return errorResponse;
+        }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#createDataProvider") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
+                .setCategory(Objects.requireNonNull(outputId)).build()) {
             TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
-
-            Response errorResponse = validateOutputConfigParameters(outputId, queryParameters);
-            if (errorResponse != null) {
-                return errorResponse;
             }
 
             IDataProviderFactory factory = manager.getFactory(outputId);
@@ -1390,7 +1392,7 @@ public class DataProviderService {
         }
     }
 
-    private static Response validateParameters(String outputId, QueryParameters queryParameters) {
+    private static @Nullable Response validateParameters(String outputId, QueryParameters queryParameters) {
         if (outputId == null) {
             return Response.status(Status.BAD_REQUEST).entity(MISSING_OUTPUTID).build();
         }
@@ -1400,7 +1402,7 @@ public class DataProviderService {
         return null;
     }
 
-    private static Response validateOutputConfigParameters(String outputId, ConfigurationQueryParameters queryParameters) {
+    private static @Nullable Response validateOutputConfigParameters(String outputId, ConfigurationQueryParameters queryParameters) {
         if (outputId == null) {
             return Response.status(Status.BAD_REQUEST).entity(MISSING_OUTPUTID).build();
         }
