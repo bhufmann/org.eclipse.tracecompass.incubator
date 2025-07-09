@@ -57,6 +57,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.Activator;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.ErrorResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TraceQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.QueryParameters;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
@@ -146,24 +147,24 @@ public class TraceManagerService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Import a trace", description = "Import a trace to the trace server. Return some base information once imported.", responses = {
             @ApiResponse(responseCode = "200", description = "The trace has been successfully added to the trace server", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Trace.class))),
-            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = NO_SUCH_TRACE, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "406", description = CANNOT_READ, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "409", description = NAME_EXISTS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "500", description = TRACE_CREATION_FAILED, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "501", description = NOT_SUPPORTED, content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = NO_SUCH_TRACE, content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "406", description = CANNOT_READ, content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = NAME_EXISTS, content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Trace.class))),
+            @ApiResponse(responseCode = "500", description = TRACE_CREATION_FAILED, content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "501", description = NOT_SUPPORTED, content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public Response putTrace(@RequestBody(content = {
             @Content(schema = @Schema(implementation = TraceQueryParameters.class))
     }, required = true) QueryParameters queryParameters) {
 
         if (queryParameters == null) {
-            return Response.status(Status.BAD_REQUEST).entity(MISSING_PARAMETERS).build();
+            return ErrorResponseUtil.newErrorResponse(Status.BAD_REQUEST, MISSING_PARAMETERS);
         }
         Map<String, Object> parameters = queryParameters.getParameters();
         String errorMessage = QueryParametersUtil.validateTraceQueryParameters(parameters);
         if (errorMessage != null) {
-            return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
+            return ErrorResponseUtil.newErrorResponse(Status.BAD_REQUEST, errorMessage);
         }
         String name = (String) parameters.get("name"); //$NON-NLS-1$
         String path = (String) parameters.get("uri"); //$NON-NLS-1$
@@ -173,7 +174,7 @@ public class TraceManagerService {
         try {
             return put(path, name, typeID);
         } catch (TmfTraceImportException | CoreException | IllegalArgumentException | SecurityException e) {
-            return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
+            return ErrorResponseUtil.newErrorResponse(Status.NOT_ACCEPTABLE, e.getMessage());
         }
     }
 
@@ -181,12 +182,12 @@ public class TraceManagerService {
             throws TmfTraceImportException, CoreException, IllegalArgumentException, SecurityException {
 
         if (!Paths.get(path).toFile().exists()) {
-            return Response.status(Status.NOT_FOUND).entity("No trace at " + path).build(); //$NON-NLS-1$
+            return ErrorResponseUtil.newErrorResponse(Status.NOT_FOUND, "No trace at " + path); //$NON-NLS-1$
         }
 
         List<TraceTypeHelper> traceTypes = TmfTraceType.selectTraceType(path, typeID);
         if (traceTypes.isEmpty()) {
-            return Response.status(Status.NOT_IMPLEMENTED).entity(NOT_SUPPORTED).build();
+            return ErrorResponseUtil.newErrorResponse(Status.NOT_IMPLEMENTED, NOT_SUPPORTED);
         }
         String traceType = traceTypes.get(0).getTraceTypeId();
         String traceName = name == null ? Paths.get(path).getFileName().toString() : name;
@@ -194,7 +195,7 @@ public class TraceManagerService {
         IResource resource = getResource(path, traceName);
         if (!resource.exists()) {
             if (!createResource(path, resource)) {
-                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(TRACE_CREATION_FAILED).build();
+                return ErrorResponseUtil.newErrorResponse(Status.INTERNAL_SERVER_ERROR, TRACE_CREATION_FAILED);
             }
             resource.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceType);
         } else {
@@ -205,7 +206,7 @@ public class TraceManagerService {
                 synchronized (TRACES) {
                     Optional<@NonNull Entry<UUID, IResource>> oldEntry = TRACES.entrySet().stream().filter(entry -> resource.equals(entry.getValue())).findFirst();
                     if (!oldEntry.isPresent()) {
-                        return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Failed to find conflicting trace").build(); //$NON-NLS-1$
+                        return ErrorResponseUtil.newErrorResponse(Status.INTERNAL_SERVER_ERROR, "Failed to find conflicting trace"); //$NON-NLS-1$
                     }
                     UUID oldUUID = oldEntry.get().getKey();
                     return Response.status(Status.CONFLICT).entity(createTraceModel(oldUUID)).build();
@@ -359,12 +360,12 @@ public class TraceManagerService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get the model object for a trace", responses = {
             @ApiResponse(responseCode = "200", description = "Return the trace model", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Trace.class))),
-            @ApiResponse(responseCode = "404", description = NO_SUCH_TRACE, content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "404", description = NO_SUCH_TRACE, content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public Response getTrace(@Parameter(description = TRACE_UUID) @PathParam("uuid") @NotNull UUID uuid) {
         Trace trace = createTraceModel(uuid);
         if (trace == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return ErrorResponseUtil.newErrorResponse(Status.NOT_FOUND, "No trace found with uuid " + uuid); //$NON-NLS-1$
         }
         return Response.ok(trace).build();
     }
@@ -382,12 +383,12 @@ public class TraceManagerService {
     @Operation(summary = "Remove a trace from the server and disk", responses = {
             @ApiResponse(responseCode = "200", description = "The trace was successfully deleted", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Trace.class))),
             @ApiResponse(responseCode = "404", description = NO_SUCH_TRACE, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "409", description = "The trace is in use by at least one experiment thus cannot be deleted", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "409", description = "The trace is in use by at least one experiment thus cannot be deleted", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Trace.class)))
     })
     public Response deleteTrace(@Parameter(description = TRACE_UUID) @PathParam("uuid") @NotNull UUID uuid) {
         Trace trace = createTraceModel(uuid);
         if (trace == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return ErrorResponseUtil.newErrorResponse(Status.NOT_FOUND, "No trace found with uuid " + uuid); //$NON-NLS-1$
         }
         if (ExperimentManagerService.isTraceInUse(uuid)) {
             return Response.status(Status.CONFLICT).entity(trace).build();

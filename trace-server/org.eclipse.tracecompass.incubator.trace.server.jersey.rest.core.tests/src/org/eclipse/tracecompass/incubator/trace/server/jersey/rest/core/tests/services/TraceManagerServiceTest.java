@@ -17,7 +17,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -31,6 +34,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.QueryParameters;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ErrorResponseImpl;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceManagerService;
 import org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.stubs.TraceModelStub;
 import org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.utils.RestServerTest;
@@ -160,5 +165,23 @@ public class TraceManagerServiceTest extends RestServerTest {
 
         // Verify that the trace type is the kernel trace type
         assertEquals("org.eclipse.linuxtools.lttng2.kernel.tracetype", traceType);
+    }
+
+    /**
+     * Test error case if trace does not exist
+     */
+    @Test
+    public void testTraceNotExist() {
+        WebTarget traces = getApplicationEndpoint().path(TRACES);
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put(NAME, "trace-does-not-exist");
+        parameters.put(URI, "/path/does/not/exist");
+        try (Response response = traces.request().post(Entity.json(new QueryParameters(parameters , Collections.emptyList())))) {
+            int code = response.getStatus();
+            assertEquals("Post trace should fail", 404, code);
+            ErrorResponseImpl result = response.readEntity(ErrorResponseImpl.class);
+            assertNotNull(result);
+            assertNotNull(result.getMessage());
+        }
     }
 }
