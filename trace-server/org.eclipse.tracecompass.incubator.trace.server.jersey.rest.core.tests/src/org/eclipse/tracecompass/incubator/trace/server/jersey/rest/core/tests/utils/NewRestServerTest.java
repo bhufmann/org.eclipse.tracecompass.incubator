@@ -67,6 +67,7 @@ import org.eclipse.tracecompass.incubator.tsp.client.core.model.Trace;
 import org.eclipse.tracecompass.incubator.tsp.client.core.model.Trace.IndexingStatusEnum;
 import org.eclipse.tracecompass.incubator.tsp.client.core.model.TraceParameters;
 import org.eclipse.tracecompass.incubator.tsp.client.core.model.TraceQueryParameters;
+import org.eclipse.tracecompass.incubator.tsp.client.core.model.TreeQueryParameters;
 import org.eclipse.tracecompass.testtraces.ctf.CtfTestTrace;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.junit.After;
@@ -1135,11 +1136,24 @@ public abstract class NewRestServerTest {
         WebTarget getEndpoint(String expUUID, String dataProviderId);
     }
 
+
+    protected interface ITreeApiResolver {
+        /**
+         * Method to get endpoint
+         * @param expUUID
+         *          The experiment UUID
+         * @param dataProviderId
+         *          The data provider ID
+         * @return the endpoint
+         */
+        Object executeApiCall(String expUUID, String dataProviderId, TreeQueryParameters parameter) throws ApiException;
+    }
+
     /**
      * Call method to execute common error test cases for a given endpoint.
      *
-     * @param exp
-     *            the experiment
+     * @param uuid
+     *            the experiment UUID
      * @param resolver
      *            the endpoint resolver
      * @param dpId
